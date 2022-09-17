@@ -71,7 +71,7 @@ _APUSEQ		=	$4017
 ; ##  iNES Header  ##
 ; ##               ##
 ; ###################
-	org	$5ff0
+	org	$8000-16
 
 	byte	"NES",$1a	; iNES file format identifier, 1A = EOF
 	byte	2		; 2 * 16kB PRG ROM
@@ -98,7 +98,6 @@ _APUSEQ		=	$4017
 ; ##  Machine Init  ##
 ; ##                ##
 ; ####################
-        org	$8000
 
 Reset:
 ; *** CPU setup ***
