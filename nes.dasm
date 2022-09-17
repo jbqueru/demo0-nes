@@ -1,0 +1,159 @@
+; Copyright 2022 Jean-Baptiste M. "JBQ" Queru
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+;    http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+
+; ######################################################################
+; ######################################################################
+; ###                                                                ###
+; ###                                                                ###
+; ###                           JBQ NES Test                         ###
+; ###                                                                ###
+; ###                                                                ###
+; ######################################################################
+; ######################################################################
+
+	processor 6502
+
+; ###################
+; ##               ##
+; ##  iNES Header  ##
+; ##               ##
+; ###################
+	org	$5ff0
+
+	byte	"NES",$1a	; iNES file format identifier, 1A = EOF
+	byte	2		; 2 * 16kB PRG ROM
+	byte	1		; 1 * 8kB CHR ROM
+	byte	%00000001	; iNES flags 6
+		;||||||||
+		;|||||||+-------- VRAM arrangement, 0 = vertical or mapper
+                ;|||||||		  1 = horizontal
+		;||||||+--------- Persistent 8kB PRG RAM at $6000
+		;|||||+---------- Trainer (typically unused)
+		;||||+----------- 4kB VRAM
+		;++++------------ Low 4 bits of mapper number. 0 = NROM
+	byte 	%00000000	; iNES flags 7
+		;||||||||
+		;|||||||+-------- VS Unisystem
+		;||||||+--------- PlayChoice-10
+		;||||++---------- 00 = iNES header format
+		;++++------------ Upper 4 bits of mapper number
+	byte	0,0,0,0,0,0,0,0	; iNes flags 8-15, reserved, 
+
+
+; ####################
+; ##                ##
+; ##  Machine Init  ##
+; ##                ##
+; ####################
+        org	$8000
+
+Reset:
+; *** CPU setup ***
+	LDX	#$ff		; set stack at $1ff (implicit stack MSB is 1)
+	TXS
+
+	CLD			; disable BCD mode, not present in NES 2A03 CPU
+	SEI			; inhibit maskable interrupts
+
+; *** disable interrupt sources ***
+	LDA	#$40
+	STA	$4017		; inhibit APU frame interrupts
+
+	LDA	#$00
+	STA	$4010		; disable DPCM interrupts
+	STA	$2000		; disable NMI VBL interrupts
+	LDX	$4015		; clear DPCM pending interrupt (side effect)
+	LDX	$2002		; clear NMI VBL pending interrupt (side effect)
+
+; *** set hardware in baseline state ***
+	STA	$2001		; disable graphics
+	STA	$4015		; disable audio
+
+; *** wait until (at least) next VBL ***
+.waitVBL1:
+	BIT	$2002
+	BPL	.waitVBL1
+
+; *** clear RAM ***
+	TAX
+.clearRAM:
+	STA	$0,X
+	STA	$100,X
+	STA	$200,X
+	STA	$300,X
+	STA	$400,X
+	STA	$500,X
+	STA	$600,X
+	STA	$700,X
+	INX
+	BNE	.clearRAM
+
+; TODO: init VRAM
+
+; *** wait until (at least) next VBL  ***
+.waitVBL2:
+	BIT	$2002
+	BPL	.waitVBL2
+
+
+; #############
+; ##         ##
+; ##  Setup  ##
+; ##         ##
+; #############
+
+; *** set background color ***
+	LDX	#$3f
+	LDY	#$00
+	STX	$2006
+        STY	$2006
+	LDA	#$14
+	STA	$2007
+
+
+; #################
+; ##             ##
+; ##  Main loop  ##
+; ##             ##
+; #################
+
+MainLoop:
+	JMP	MainLoop
+
+
+; ##########################
+; ##                      ##
+; ##  Interrupt handlers  ##
+; ##                      ##
+; ##########################
+
+NMIHandler
+	RTI
+
+IRQHandler
+	RTI
+
+
+; ###################
+; ##               ##
+; ##  CPU vectors  ##
+; ##               ##
+; ###################
+
+	org	$fffa
+	word	NMIHandler
+	word	Reset
+        word	IRQHandler
+
+; 345678901234567890123456789012345678901234567890123456789012345678901234567890
