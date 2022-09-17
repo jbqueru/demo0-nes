@@ -34,11 +34,14 @@
 _PPUCTRL	=	$2000
 _PPUMASK	=	$2001
 _PPUSTATUS	=	$2002
-_OAMADDR	=	$2003
-_OAMDATA	=	$2004
 _PPUSCROLL	=	$2005
 _PPUADDR	=	$2006
 _PPUDATA	=	$2007
+
+; *** OAM access registers ***
+_OAMADDR	=	$2003
+_OAMDATA	=	$2004
+_OAMDMA		=	$4014
 
 ; *** APU registers ***
 _APUSQ1CTRL	=	$4000
@@ -50,20 +53,21 @@ _APUSQ2SWEEP	=	$4005
 _APUSQ2LO	=	$4006
 _APUSQ2HI	=	$4007
 _APUTRICTRL	=	$4008
-_APUTRILO	=	$400a
-_APUTRIHI	=	$400b
-_APUNSECTRL	=	$400c
-_APUNSELO	=	$400e
-_APUNSEHI	=	$400f
+_APUTRILO	=	$400A
+_APUTRIHI	=	$400B
+_APUNSECTRL	=	$400C
+_APUNSELO	=	$400E
+_APUNSEHI	=	$400F
 _APUDMCCTRL	=	$4010
 _APUDMCRAW	=	$4011
 _APUDMCADDR	=	$4012
 _APUDMCLEN	=	$4013
-_OAMDMA		=	$4014
 _APUSTATUS	=	$4015
-_JOY1		=	$4016
-_JOY2		=	$4017
 _APUSEQ		=	$4017
+
+; *** Joypad registers ***
+_JOYPAD1	=	$4016
+_JOYPAD2	=	$4017
 
 
 ; ###################
@@ -73,7 +77,7 @@ _APUSEQ		=	$4017
 ; ###################
 	org	$8000-16
 
-	byte	"NES",$1a	; iNES file format identifier, 1A = EOF
+	byte	"NES",$1A	; iNES file format identifier, 1A = EOF
 	byte	2		; 2 * 16kB PRG ROM
 	byte	1		; 1 * 8kB CHR ROM
 	byte	%00000001	; iNES flags 6
@@ -101,7 +105,7 @@ _APUSEQ		=	$4017
 
 Reset:
 ; *** CPU setup ***
-	LDX	#$ff		; set stack at $1ff (implicit stack MSB is 1)
+	LDX	#$FF		; set stack at $1ff (implicit stack MSB is 1)
 	TXS
 
 	CLD			; disable BCD mode, not present in NES 2A03 CPU
@@ -111,7 +115,7 @@ Reset:
 	LDA	#$40
 	STA	_APUSEQ		; inhibit APU sequencer interrupts
 
-	LDA	#$00
+	LDA	#0
 	STA	_APUDMCCTRL	; disable DMC interrupts
 	STA	_PPUCTRL	; disable NMI VBL interrupts
 	LDX	_APUSTATUS	; clear DMC pending interrupt (side effect)
@@ -155,7 +159,7 @@ Reset:
 ; #############
 
 ; *** set background color ***
-	LDX	#$3f
+	LDX	#$3F
 	LDY	#$00
 	STX	_PPUADDR
         STY	_PPUADDR
@@ -192,7 +196,7 @@ IRQHandler
 ; ##               ##
 ; ###################
 
-	org	$fffa
+	org	$FFFA
 	word	NMIHandler
 	word	Reset
         word	IRQHandler
