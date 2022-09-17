@@ -26,6 +26,48 @@
 
 ; ###################
 ; ##               ##
+; ##  Definitions  ##
+; ##               ##
+; ###################
+
+; *** PPU registers ***
+_PPUCTRL	=	$2000
+_PPUMASK	=	$2001
+_PPUSTATUS	=	$2002
+_OAMADDR	=	$2003
+_OAMDATA	=	$2004
+_PPUSCROLL	=	$2005
+_PPUADDR	=	$2006
+_PPUDATA	=	$2007
+
+; *** APU registers ***
+_APUSQ1CTRL	=	$4000
+_APUSQ1SWEEP	=	$4001
+_APUSQ1LO	=	$4002
+_APUSQ1HI	=	$4003
+_APUSQ2CTRL	=	$4004
+_APUSQ2SWEEP	=	$4005
+_APUSQ2LO	=	$4006
+_APUSQ2HI	=	$4007
+_APUTRICTRL	=	$4008
+_APUTRILO	=	$400a
+_APUTRIHI	=	$400b
+_APUNSECTRL	=	$400c
+_APUNSELO	=	$400e
+_APUNSEHI	=	$400f
+_APUDMCCTRL	=	$4010
+_APUDMCRAW	=	$4011
+_APUDMCADDR	=	$4012
+_APUDMCLEN	=	$4013
+_OAMDMA		=	$4014
+_APUSTATUS	=	$4015
+_JOY1		=	$4016
+_JOY2		=	$4017
+_APUSEQ		=	$4017
+
+
+; ###################
+; ##               ##
 ; ##  iNES Header  ##
 ; ##               ##
 ; ###################
@@ -68,21 +110,21 @@ Reset:
 
 ; *** disable interrupt sources ***
 	LDA	#$40
-	STA	$4017		; inhibit APU frame interrupts
+	STA	_APUSEQ		; inhibit APU sequencer interrupts
 
 	LDA	#$00
-	STA	$4010		; disable DPCM interrupts
-	STA	$2000		; disable NMI VBL interrupts
-	LDX	$4015		; clear DPCM pending interrupt (side effect)
-	LDX	$2002		; clear NMI VBL pending interrupt (side effect)
+	STA	_APUDMCCTRL	; disable DMC interrupts
+	STA	_PPUCTRL	; disable NMI VBL interrupts
+	LDX	_APUSTATUS	; clear DMC pending interrupt (side effect)
+	LDX	_PPUSTATUS	; clear NMI VBL pending interrupt (side effect)
 
 ; *** set hardware in baseline state ***
-	STA	$2001		; disable graphics
-	STA	$4015		; disable audio
+	STA	_PPUMASK	; disable graphics
+	STA	_APUSTATUS	; disable audio
 
 ; *** wait until (at least) next VBL ***
 .waitVBL1:
-	BIT	$2002
+	BIT	_PPUSTATUS
 	BPL	.waitVBL1
 
 ; *** clear RAM ***
@@ -103,7 +145,7 @@ Reset:
 
 ; *** wait until (at least) next VBL  ***
 .waitVBL2:
-	BIT	$2002
+	BIT	_PPUSTATUS
 	BPL	.waitVBL2
 
 
@@ -116,10 +158,10 @@ Reset:
 ; *** set background color ***
 	LDX	#$3f
 	LDY	#$00
-	STX	$2006
-        STY	$2006
+	STX	_PPUADDR
+        STY	_PPUADDR
 	LDA	#$14
-	STA	$2007
+	STA	_PPUDATA
 
 
 ; #################
