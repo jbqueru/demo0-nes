@@ -150,6 +150,10 @@ Reset:
 	BIT	_PPUSTATUS
 	BPL	.waitVBL2
 
+; *** enable NMI ***
+	LDA	#%10000000
+        STA	_PPUCTRL
+
 ; *** clear VRAM ***
 	LDX	#$20
 	LDY	#$00
@@ -168,16 +172,25 @@ Reset:
 	BNE	.clearVRAM1
 
 
-.waitVBL3:
-	BIT	_PPUSTATUS
-	BPL	.waitVBL3
-
-
 ; #############
 ; ##         ##
 ; ##  Setup  ##
 ; ##         ##
 ; #############
+
+	LDA	#0
+	STA	$FF
+waitVBLSetup:
+	CMP	$FF
+	BEQ	waitVBLSetup
+
+; *** turn rendering on ***
+	LDA	#%00011110
+	STA	_PPUMASK
+
+; *** init OAM data ***
+	LDA	#$2
+	STA	_OAMDMA
 
 ; *** set background color ***
 	LDX	#$3F
@@ -185,6 +198,13 @@ Reset:
 	STX	_PPUADDR
 	STY	_PPUADDR
 	LDA	#$14
+	STA	_PPUDATA
+
+; *** set sprite color ***
+	LDY	#$11
+	STX	_PPUADDR
+	STY	_PPUADDR
+	LDA	#$32
 	STA	_PPUDATA
 
 ; *** display tile 1 top-left ***
@@ -195,15 +215,12 @@ Reset:
 	LDA	#$1
 	STA	_PPUDATA
 
-; *** turn rendering on ***
+; *** reset address and scroll position after accessing PPU data ***
 	LDY	#0
 	STY	_PPUADDR
 	STY	_PPUADDR
 	STY	_PPUSCROLL
 	STY	_PPUSCROLL
-
-	LDA	#%00001110
-	STA	_PPUMASK
 
 ; #################
 ; ##             ##
@@ -212,6 +229,20 @@ Reset:
 ; #################
 
 MainLoop:
+	LDA	#0
+	STA	$FF
+waitVBLMain:
+	CMP	$FF
+	BEQ	waitVBLMain
+
+	LDA	#$2
+	STA	_OAMDMA
+
+        LDA	#50
+	STA	$200
+	LDA	#51
+	STA	$203
+
 	JMP	MainLoop
 
 
@@ -222,6 +253,7 @@ MainLoop:
 ; ##########################
 
 NMIHandler
+	INC	$FF
 	RTI
 
 IRQHandler
