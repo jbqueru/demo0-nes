@@ -94,7 +94,8 @@ _JOYPAD2	=	$4017
 		;||||||+--------- PlayChoice-10
 		;||||++---------- 00 = iNES header format
 		;++++------------ Upper 4 bits of mapper number
-	byte	0,0,0,0,0,0,0,0	; iNes flags 8-15, reserved, 
+	byte	0,0,0,0,0,0,0,0	; iNes flags 8-15, reserved, use NES 2.0 format
+        			; 	for extended features
 
 
 ; ####################
@@ -126,14 +127,14 @@ Reset:
 	STA	_APUSTATUS	; disable audio
 
 ; *** wait until (at least) next VBL ***
-.waitVBL1:
+waitVBL1:
 	BIT	_PPUSTATUS
-	BPL	.waitVBL1
+	BPL	waitVBL1
 
 ; *** clear RAM ***
 	LDA	#0
 	TAX
-.clearRAM:
+clearRAM:
 	STA	$0,X
 	STA	$100,X
 	STA	$200,X
@@ -143,12 +144,12 @@ Reset:
 	STA	$600,X
 	STA	$700,X
 	INX
-	BNE	.clearRAM
+	BNE	clearRAM
 
 ; *** wait until (at least) next VBL - from this point PPU is OK ***
-.waitVBL2:
+waitVBL2:
 	BIT	_PPUSTATUS
-	BPL	.waitVBL2
+	BPL	waitVBL2
 
 ; *** enable NMI ***
 	LDA	#%10000000
@@ -162,14 +163,14 @@ Reset:
 
 	LDY	#0		; 256 outer loops
 	TYA
-.clearVRAM1:
+clearVRAM1:
 	LDX	#16		; 16 inner loops, 4096 bytes
-.clearVRAM2:
+clearVRAM2:
 	STA	_PPUDATA
 	DEX
-	BNE	.clearVRAM2
+	BNE	clearVRAM2
 	DEY
-	BNE	.clearVRAM1
+	BNE	clearVRAM1
 
 
 ; #############
