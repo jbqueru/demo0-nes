@@ -244,6 +244,32 @@ waitVBLMain:
 	LDA	#51
 	STA	$203
 
+; *** Reset to default scroll on sprite 0 ***
+	LDA	#0
+waitOff	BIT	_PPUSTATUS
+	BVS	waitOff
+waitOn	BIT	_PPUSTATUS
+	BVC	waitOn
+	STA	_PPUADDR
+	STA	_PPUSCROLL
+	STA	_PPUSCROLL
+	STA	_PPUADDR
+
+; waste 325 cycles (3 lines = 341, minus 16 for the STA instructions above)
+
+	.repeat	45
+	PHP
+	PLP
+	.repend
+        .repeat	5
+	NOP
+        .repend
+
+	STA	_PPUADDR
+	STA	_PPUSCROLL
+	STA	_PPUSCROLL
+	STA	_PPUADDR
+
 	JMP	MainLoop
 
 
