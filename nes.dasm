@@ -223,6 +223,53 @@ waitVBLSetup:
 	STY	_PPUSCROLL
 	STY	_PPUSCROLL
 
+; *** move all sprites out of the way ***
+
+	CLC
+	LDX	#64
+InitSprite:
+	LDA	#$FF
+	STA	$200,Y
+	TYA
+	ADC	#4
+	TAY
+	DEX
+	BNE	InitSprite
+
+        LDA	#50
+	STA	$200
+	LDA	#51
+	STA	$203
+
+	LDY	#145
+	LDX	#10
+	STY	$204
+	STX	$207
+	LDX	#20
+	STY	$208
+	STX	$20B
+	LDX	#40
+	STY	$20C
+	STX	$20F
+	LDX	#50
+	STY	$210
+	STX	$213
+	LDX	#80
+	STY	$214
+	STX	$217
+	LDX	#90
+	STY	$218
+	STX	$21B
+	LDX	#110
+	STY	$21C
+	STX	$21F
+	LDX	#120
+	STY	$220
+	STX	$223
+	LDX	#160
+	STY	$224
+	STX	$227
+
 ; #################
 ; ##             ##
 ; ##  Main loop  ##
@@ -238,11 +285,6 @@ waitVBLMain:
 
 	LDA	#$2
 	STA	_OAMDMA
-
-        LDA	#50
-	STA	$200
-	LDA	#51
-	STA	$203
 
 ; *** Reset to default scroll on sprite 0 ***
 	LDA	#0
@@ -265,6 +307,18 @@ waitOn	BIT	_PPUSTATUS
 	NOP
         .repend
 
+	STA	_PPUADDR
+	STA	_PPUSCROLL
+	STA	_PPUSCROLL
+	STA	_PPUADDR
+
+waitSOver
+	LDA	_PPUSTATUS
+	LDA	#%00100000
+	AND	_PPUSTATUS
+	BEQ	waitSOver
+
+	LDA	#0
 	STA	_PPUADDR
 	STA	_PPUSCROLL
 	STA	_PPUSCROLL
