@@ -31,38 +31,9 @@
 ; ###################
 
 	include	"ppudefs.dasm"
-
-; *** OAM access registers ***
-_OAMADDR	=	$2003
-_OAMDATA	=	$2004
-_OAMDMA		=	$4014
-
-; *** APU registers ***
-_APUSQ1CTRL	=	$4000
-_APUSQ1SWEEP	=	$4001
-_APUSQ1LO	=	$4002
-_APUSQ1HI	=	$4003
-_APUSQ2CTRL	=	$4004
-_APUSQ2SWEEP	=	$4005
-_APUSQ2LO	=	$4006
-_APUSQ2HI	=	$4007
-_APUTRICTRL	=	$4008
-_APUTRILO	=	$400A
-_APUTRIHI	=	$400B
-_APUNSECTRL	=	$400C
-_APUNSELO	=	$400E
-_APUNSEHI	=	$400F
-_APUDMCCTRL	=	$4010
-_APUDMCRAW	=	$4011
-_APUDMCADDR	=	$4012
-_APUDMCLEN	=	$4013
-_APUSTATUS	=	$4015
-_APUSEQ		=	$4017
-
-; *** Joypad registers ***
-_JOYPAD1	=	$4016
-_JOYPAD2	=	$4017
-
+        include "oamdefs.dasm"
+        include "apudefs.dasm"
+        include "joydefs.dasm"
 
 ; ###################
 ; ##               ##
