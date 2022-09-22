@@ -71,7 +71,7 @@
 
 Reset:
 ; *** CPU setup ***
-	LDX	#$FF		; set stack at $1ff (implicit stack MSB is 1)
+	LDX	#$FF		; set stack at $01FF (stack is always $01xx)
 	TXS
 
 	CLD			; disable BCD mode, not present in NES 2A03 CPU
@@ -83,8 +83,9 @@ Reset:
 
 	LDA	#0
 	STA	_APUDMCCTRL	; disable DMC interrupts
-	STA	_PPUCTRL	; disable NMI VBL interrupts
 	LDX	_APUSTATUS	; clear DMC pending interrupt (side effect)
+
+	STA	_PPUCTRL	; disable NMI VBL interrupts
 	LDX	_PPUSTATUS	; clear NMI VBL pending interrupt (side effect)
 
 ; *** set hardware in baseline state ***
@@ -92,14 +93,14 @@ Reset:
 	STA	_APUSTATUS	; disable audio
 
 ; *** wait until (at least) next VBL ***
-waitVBL1:
+PollVBL1:
 	BIT	_PPUSTATUS
-	BPL	waitVBL1
+	BPL	PollVBL1
 
 ; *** clear RAM ***
 	LDA	#0
 	TAX
-clearRAM:
+ClearRAM:
 	STA	$0,X
 	STA	$100,X
 	STA	$200,X
@@ -109,12 +110,12 @@ clearRAM:
 	STA	$600,X
 	STA	$700,X
 	INX
-	BNE	clearRAM
+	BNE	ClearRAM
 
 ; *** wait until (at least) next VBL - from this point PPU is OK ***
-waitVBL2:
+PollVBL2:
 	BIT	_PPUSTATUS
-	BPL	waitVBL2
+	BPL	PollVBL2
 
 ; *** enable NMI ***
 	LDA	#%10000000
@@ -137,6 +138,17 @@ clearVRAM2:
 	DEY
 	BNE	clearVRAM1
 
+; *** prepare OAM shadow with sprites out of the way ***
+	CLC
+	LDX	#64
+InitSprite:
+	LDA	#$FF
+	STA	$200,Y
+	TYA
+	ADC	#4
+	TAY
+	DEX
+	BNE	InitSprite
 
 ; #############
 ; ##         ##
@@ -173,33 +185,12 @@ waitVBLSetup:
 	LDA	#$32
 	STA	_PPUDATA
 
-; *** display tile 1 top-left ***
-	LDX	#$20
-	LDY	#$62
-	STX	_PPUADDR
-	STY	_PPUADDR
-	LDA	#$1
-	STA	_PPUDATA
-
 ; *** reset address and scroll position after accessing PPU data ***
 	LDY	#0
 	STY	_PPUADDR
 	STY	_PPUADDR
 	STY	_PPUSCROLL
 	STY	_PPUSCROLL
-
-; *** move all sprites out of the way ***
-
-	CLC
-	LDX	#64
-InitSprite:
-	LDA	#$FF
-	STA	$200,Y
-	TYA
-	ADC	#4
-	TAY
-	DEX
-	BNE	InitSprite
 
 ; #################
 ; ##             ##
