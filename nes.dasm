@@ -30,13 +30,7 @@
 ; ##               ##
 ; ###################
 
-; *** PPU registers ***
-_PPUCTRL	=	$2000
-_PPUMASK	=	$2001
-_PPUSTATUS	=	$2002
-_PPUSCROLL	=	$2005
-_PPUADDR	=	$2006
-_PPUDATA	=	$2007
+	include	"ppudefs.dasm"
 
 ; *** OAM access registers ***
 _OAMADDR	=	$2003
