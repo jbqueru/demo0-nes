@@ -167,6 +167,13 @@ InitPalette:
 	DEX
 	BNE	InitPalette
 
+; *** reset address and scroll position after accessing PPU data ***
+	LDA	#0
+	STA	_PPUSCROLL
+	STA	_PPUSCROLL
+	LDA	#%10000000
+	STA	_PPUCTRL
+
 ; ######################
 ; ##                  ##
 ; ##  Graphics setup  ##
@@ -196,11 +203,11 @@ waitVBLSetup:
 	STA	_PPUDATA
 
 ; *** reset address and scroll position after accessing PPU data ***
-	LDY	#0
-	STY	_PPUADDR
-	STY	_PPUADDR
-	STY	_PPUSCROLL
-	STY	_PPUSCROLL
+	LDA	#0
+	STA	_PPUSCROLL
+	STA	_PPUSCROLL
+	LDA	#%10000000
+	STA	_PPUCTRL
 
 ; #################
 ; ##             ##
