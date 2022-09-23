@@ -95,7 +95,7 @@ PollVBL1:
 ; *** clear RAM ***
 	LDA	#0
 	TAX
-ClearRAM:
+InitRAM:
 	STA	$0,X
 	STA	$100,X
 	STA	$200,X
@@ -105,12 +105,18 @@ ClearRAM:
 	STA	$600,X
 	STA	$700,X
 	INX
-	BNE	ClearRAM
+	BNE	InitRAM
 
 ; *** wait until (at least) second VBL - from this point PPU is OK ***
 PollVBL2:
 	BIT	_PPUSTATUS
 	BPL	PollVBL2
+
+; #####################
+; ##                 ##
+; ##  Graphics Init  ##
+; ##                 ##
+; #####################
 
 ; *** init PPU ***
 	LDA	#0
@@ -127,18 +133,18 @@ PollVBL2:
 
 	LDY	#0		; 256 outer loops
 	TYA
-clearVRAM1:
+InitVRAM1:
 	LDX	#16		; 16 inner loops, 4096 bytes
-clearVRAM2:
+InitVRAM2:
 	STA	_PPUDATA
 	DEX
-	BNE	clearVRAM2
+	BNE	InitVRAM2
 	DEY
-	BNE	clearVRAM1
+	BNE	InitVRAM1
 
 ; *** prepare OAM shadow with sprites out of the way ***
 	CLC
-	LDX	#64
+	LDX	#$40
 InitSprite:
 	LDA	#$FF
 	STA	$200,Y
@@ -148,10 +154,6 @@ InitSprite:
 	DEX
 	BNE	InitSprite
 
-; *** init OAM data ***
-	LDA	#$2
-	STA	_OAMDMA
-
 ; *** clear palette ***
 	LDX	#$3F
 	LDY	#$00
@@ -159,17 +161,17 @@ InitSprite:
 	STY	_PPUADDR
 
 	LDA	#$1D
-	LDX	#64
-ClearPalette:
+	LDX	#32
+InitPalette:
 	STA	_PPUDATA
 	DEX
-	BNE	ClearPalette
+	BNE	InitPalette
 
-; #############
-; ##         ##
-; ##  Setup  ##
-; ##         ##
-; #############
+; ######################
+; ##                  ##
+; ##  Graphics setup  ##
+; ##                  ##
+; ######################
 
 	LDA	#0
 	STA	$FF
@@ -225,11 +227,11 @@ waitVBLMain:
 ; ##                      ##
 ; ##########################
 
-NMIHandler
+NMIHandler:
 	INC	$FF
 	RTI
 
-IRQHandler
+IRQHandler:
 	RTI
 
 
