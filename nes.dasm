@@ -24,12 +24,6 @@
 
 	processor 6502
 
-; ###################
-; ##               ##
-; ##  Definitions  ##
-; ##               ##
-; ###################
-
 	include	"ppudefs.dasm"
 	include "oamdefs.dasm"
 	include "apudefs.dasm"
@@ -37,7 +31,7 @@
 
 ; ###################
 ; ##               ##
-; ##  iNES Header  ##
+; ##  iNES header  ##
 ; ##               ##
 ; ###################
 
@@ -66,7 +60,7 @@
 
 ; ####################
 ; ##                ##
-; ##  Machine Init  ##
+; ##  Machine init  ##
 ; ##                ##
 ; ####################
 
@@ -112,9 +106,10 @@ PollVBL2:
 	BIT	_PPUSTATUS
 	BPL	PollVBL2
 
+
 ; #####################
 ; ##                 ##
-; ##  Graphics Init  ##
+; ##  Graphics init  ##
 ; ##                 ##
 ; #####################
 
@@ -174,6 +169,7 @@ InitPalette:
 	LDA	#%10000000
 	STA	_PPUCTRL
 
+
 ; ######################
 ; ##                  ##
 ; ##  Graphics setup  ##
@@ -182,9 +178,9 @@ InitPalette:
 
 	LDA	#0
 	STA	$FF
-waitVBLSetup:
+WaitVBLSetup:
 	CMP	$FF
-	BEQ	waitVBLSetup
+	BEQ	WaitVBLSetup
 
 ; *** turn rendering on ***
 	LDA	#%00011110
@@ -194,20 +190,13 @@ waitVBLSetup:
 	LDA	#$2
 	STA	_OAMDMA
 
-; *** set background color ***
-	LDX	#$3F
-	LDY	#$00
-	STX	_PPUADDR
-	STY	_PPUADDR
-	LDA	#$14
-	STA	_PPUDATA
-
 ; *** reset address and scroll position after accessing PPU data ***
 	LDA	#0
 	STA	_PPUSCROLL
 	STA	_PPUSCROLL
 	LDA	#%10000000
 	STA	_PPUCTRL
+
 
 ; #################
 ; ##             ##
@@ -218,9 +207,9 @@ waitVBLSetup:
 MainLoop:
 	LDA	#0
 	STA	$FF
-waitVBLMain:
+WaitVBLMain:
 	CMP	$FF
-	BEQ	waitVBLMain
+	BEQ	WaitVBLMain
 
 	LDA	#$2
 	STA	_OAMDMA
@@ -262,15 +251,6 @@ IRQHandler:
 
 	org	$10000		; not real, but gives the correct file layout
 
-	byte	%11111110
-	byte	%10000010
-	byte	%10000010
-	byte	%10000010
-	byte	%10000010
-	byte	%10000010
-	byte	%11111110
-	byte	%00000000
-
 	byte	%00000000
 	byte	%00000000
 	byte	%00000000
@@ -280,23 +260,15 @@ IRQHandler:
 	byte	%00000000
 	byte	%00000000
 
-	byte	%10000010
-	byte	%01000100
-	byte	%00101000
-	byte	%00010000
-	byte	%00101000
-	byte	%01000100
-	byte	%10000010
+	byte	%00000000
+	byte	%00000000
+	byte	%00000000
+	byte	%00000000
+	byte	%00000000
+	byte	%00000000
+	byte	%00000000
 	byte	%00000000
 
-	byte	%00000000
-	byte	%00000000
-	byte	%00000000
-	byte	%00000000
-	byte	%00000000
-	byte	%00000000
-	byte	%00000000
-	byte	%00000000
 
 ; ###########
 ; ##       ##
