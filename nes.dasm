@@ -77,19 +77,13 @@ Reset:
 	CLD			; disable BCD mode, not present in NES 2A03 CPU
 	SEI			; inhibit maskable interrupts
 
-; *** disable interrupt sources ***
+; *** disable audio interrupt sources ***
 	LDA	#$40
 	STA	_APUSEQ		; inhibit APU sequencer interrupts
 
 	LDA	#0
 	STA	_APUDMCCTRL	; disable DMC interrupts
 	LDX	_APUSTATUS	; clear DMC pending interrupt (side effect)
-
-	STA	_PPUCTRL	; disable NMI VBL interrupts
-	LDX	_PPUSTATUS	; clear NMI VBL pending interrupt (side effect)
-
-; *** set hardware in baseline state ***
-	STA	_PPUMASK	; disable graphics
 	STA	_APUSTATUS	; disable audio
 
 ; *** wait until (at least) next VBL ***
@@ -117,7 +111,10 @@ PollVBL2:
 	BIT	_PPUSTATUS
 	BPL	PollVBL2
 
-; *** enable NMI ***
+; *** init graphics chip ***
+	LDA	#0
+	STA	_PPUMASK	; disable graphics
+	LDX	_PPUSTATUS	; clear NMI VBL pending interrupt (side effect)
 	LDA	#%10000000
         STA	_PPUCTRL
 
