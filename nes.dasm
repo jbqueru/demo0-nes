@@ -31,15 +31,16 @@
 ; ###################
 
 	include	"ppudefs.dasm"
-        include "oamdefs.dasm"
-        include "apudefs.dasm"
-        include "joydefs.dasm"
+	include "oamdefs.dasm"
+	include "apudefs.dasm"
+	include "joydefs.dasm"
 
 ; ###################
 ; ##               ##
 ; ##  iNES Header  ##
 ; ##               ##
 ; ###################
+
 	org	$8000-16
 
 	byte	"NES",$1A	; iNES file format identifier, 1A = EOF
@@ -77,7 +78,7 @@ Reset:
 	CLD			; disable BCD mode, not present in NES 2A03 CPU
 	SEI			; inhibit maskable interrupts
 
-; *** disable audio interrupt sources ***
+; *** disable APU (including interrupts) ***
 	LDA	#$40
 	STA	_APUSEQ		; inhibit APU sequencer interrupts
 
@@ -86,7 +87,7 @@ Reset:
 	LDX	_APUSTATUS	; clear DMC pending interrupt (side effect)
 	STA	_APUSTATUS	; disable audio
 
-; *** wait until (at least) next VBL ***
+; *** wait until (at least) first VBL ***
 PollVBL1:
 	BIT	_PPUSTATUS
 	BPL	PollVBL1
@@ -106,12 +107,12 @@ ClearRAM:
 	INX
 	BNE	ClearRAM
 
-; *** wait until (at least) next VBL - from this point PPU is OK ***
+; *** wait until (at least) second VBL - from this point PPU is OK ***
 PollVBL2:
 	BIT	_PPUSTATUS
 	BPL	PollVBL2
 
-; *** init graphics chip ***
+; *** init PPU ***
 	LDA	#0
 	STA	_PPUMASK	; disable graphics
 	LDX	_PPUSTATUS	; clear NMI VBL pending interrupt (side effect)
@@ -147,6 +148,23 @@ InitSprite:
 	DEX
 	BNE	InitSprite
 
+; *** init OAM data ***
+	LDA	#$2
+	STA	_OAMDMA
+
+; *** clear palette ***
+	LDX	#$3F
+	LDY	#$00
+	STX	_PPUADDR
+	STY	_PPUADDR
+
+	LDA	#$1D
+	LDX	#64
+ClearPalette:
+	STA	_PPUDATA
+	DEX
+	BNE	ClearPalette
+
 ; #############
 ; ##         ##
 ; ##  Setup  ##
@@ -173,13 +191,6 @@ waitVBLSetup:
 	STX	_PPUADDR
 	STY	_PPUADDR
 	LDA	#$14
-	STA	_PPUDATA
-
-; *** set sprite color ***
-	LDY	#$11
-	STX	_PPUADDR
-	STY	_PPUADDR
-	LDA	#$32
 	STA	_PPUDATA
 
 ; *** reset address and scroll position after accessing PPU data ***
