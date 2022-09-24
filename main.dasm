@@ -43,7 +43,7 @@
 	byte	%00000001	; iNES flags 6
 		;||||||||
 		;|||||||+-------- VRAM arrangement, 0 = vertical or mapper
-                ;|||||||		  1 = horizontal
+		;|||||||		  1 = horizontal
 		;||||||+--------- Persistent 8kB PRG RAM at $6000
 		;|||||+---------- Trainer (typically unused)
 		;||||+----------- 4kB VRAM
@@ -87,6 +87,7 @@ PollVBL1:
 	BPL	PollVBL1
 
 ; *** clear RAM ***
+; For 2kB total RAM, doing the writes 256 bytes apart is lazy but effective
 	LDA	#0
 	TAX
 InitRAM:
@@ -121,6 +122,7 @@ PollVBL2:
         STA	_PPUCTRL
 
 ; *** clear VRAM ***
+; unlike plain RAM, the VRAM pointer _PPUADDS auto-increments, it's easier.
 	LDX	#$20
 	LDY	#$00
 	STX	_PPUADDR	; set PPU Address to $2000, beginning of VRAM
@@ -178,9 +180,24 @@ InitPalette:
 
 	LDA	#0
 	STA	$FF
-WaitVBLSetup:
+WaitVBLSetup1:
 	CMP	$FF
-	BEQ	WaitVBLSetup
+	BEQ	WaitVBLSetup1
+
+; *** setup while rendering is still off, no perf concern ***
+
+; *** reset address and scroll position after accessing PPU data ***
+	LDA	#0
+	STA	_PPUSCROLL
+	STA	_PPUSCROLL
+	LDA	#%10000000
+	STA	_PPUCTRL
+
+	LDA	#0
+	STA	$FF
+WaitVBLSetup2:
+	CMP	$FF
+	BEQ	WaitVBLSetup2
 
 ; *** turn rendering on ***
 	LDA	#%00011110
@@ -211,6 +228,7 @@ WaitVBLMain:
 	CMP	$FF
 	BEQ	WaitVBLMain
 
+; *** update sprites first ***
 	LDA	#$2
 	STA	_OAMDMA
 
