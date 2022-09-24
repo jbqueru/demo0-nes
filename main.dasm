@@ -214,6 +214,7 @@ WaitVBLMain:
 	BEQ	WaitVBLMain
 
 ; *** update sprites first ***
+	NOP			; TODO: remove later, not useful.
 	LDA	#$2
 	STA	_OAMDMA
 
