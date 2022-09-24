@@ -87,6 +87,7 @@ PollVBL1:
 	BPL	PollVBL1
 
 ; *** clear RAM ***
+; For 2kB total RAM, doing the writes 256 bytes apart is lazy but effective
 	LDA	#0
 	TAX
 InitRAM:
@@ -121,6 +122,7 @@ PollVBL2:
         STA	_PPUCTRL
 
 ; *** clear VRAM ***
+; unlike plain RAM, the VRAM pointer _PPUADDS auto-increments, it's easier.
 	LDX	#$20
 	LDY	#$00
 	STX	_PPUADDR	; set PPU Address to $2000, beginning of VRAM
