@@ -213,6 +213,7 @@ WaitVBLMain:
 	CMP	$FF
 	BEQ	WaitVBLMain
 
+; *** update sprites first ***
 	LDA	#$2
 	STA	_OAMDMA
 
